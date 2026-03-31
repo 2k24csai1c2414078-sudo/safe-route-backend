@@ -2,43 +2,46 @@ const express = require("express");
 const router = express.Router();
 
 const RouteRequest = require("../models/routeRequest");
+const getBestRoutes = require("../utils/routeAI");
+const Civic = require("../models/civicIssue");
 
-// API to receive route request from frontend
 router.post("/generate", async (req, res) => {
   const { source, destination } = req.body;
 
+  // Validation
+  if (!source || !destination) {
+    return res.status(400).json({
+      success: false,
+      message: "Source and destination required"
+    });
+  }
+
   try {
-    // Here Person 3 AI module will be called
-    // For now we mock the AI output (later we will replace with actual AI result)
-    const safeRoute = {
-      route: "Safe Route Path",
-      score: 8.5,
-      details: "Low crime, low traffic"
-    };
+    const civicIssues = await Civic.find();
 
-    const fastRoute = {
-      route: "Fast Route Path",
-      time: "20 min",
-      details: "Minimum distance"
-    };
+    const result = getBestRoutes(source, destination, civicIssues);
 
-    // Save to DB
-    const saved = await RouteRequest.create({
+    await RouteRequest.create({
       source,
       destination,
-      safeRoute,
-      fastRoute
+      safeRoute: result.safeRoute,
+      fastRoute: result.alternativeRoute
     });
 
     res.json({
       success: true,
-      data: saved
+      data: {
+        source,
+        destination,
+        safeRoute: result.safeRoute,
+        alternativeRoute: result.alternativeRoute
+      }
     });
 
   } catch (err) {
-    res.json({
+    res.status(500).json({
       success: false,
-      error: err
+      error: err.message
     });
   }
 });

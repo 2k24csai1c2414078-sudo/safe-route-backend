@@ -17,7 +17,7 @@ This project provides AI-based safe route suggestions using backend logic.
 - Express
 - MongoDB
 
-## My Role (Person 2)
+## My Role 
 - Built backend APIs
 - Integrated database
 - Developed AI route logic
